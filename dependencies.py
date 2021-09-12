@@ -1,0 +1,27 @@
+import datetime
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, ForeignKeyConstraint
+from sqlalchemy.orm import scoped_session,sessionmaker
+engine=create_engine("postgresql://postgres:postgres@localhost:5432/postgres")
+db=scoped_session(sessionmaker(bind=engine))
+
+db.execute("create table users (uno serial primary key, uname varchar not null, password varchar not null);")
+db.commit()
+print("users created...")
+db.execute("create table users_info (uno integer primary key references users, name varchar not null, friends integer not null);")
+db.commit()
+print("users_info created...")
+db.execute("create table users_info_ (uno integer primary key references users, friends varchar, dob varchar);")
+db.commit()
+print("users_info_ created...")
+db.execute(f"create table tr (time varchar, process varchar);")
+db.commit()
+print(f"table tr created...")
+db.execute(f"create function aa() returns trigger as $aa$ begin IF(TG_OP = 'INSERT') THEN insert into tr values (current_timestamp,'insert'); ELSIF(TG_OP = 'UPDATE') THEN insert into tr values (current_timestamp,'update'); END IF; return new; end; $aa$ language plpgsql;")
+db.commit()
+print(f"function created...")
+db.execute(f"create trigger aa after insert or update on users_info for each row execute procedure aa();")
+db.commit()
+print("trigger created...")
+db.execute(f"create procedure inse (a integer,b varchar,c varchar) language sql as $$ insert into users_info_ values (a,b,c); $$;")
+db.commit()
+print(f"procedure inse created...")
